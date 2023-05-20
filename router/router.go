@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -14,6 +15,17 @@ func Configure() *gin.Engine {
 
 	router := gin.New()
 	router.Use(gin.Recovery())
+
+	router.Use(gin.LoggerWithFormatter(func(params gin.LogFormatterParams) string {
+		log.WithFields(log.Fields{
+			"client_ip":  params.ClientIP,
+			"status":     params.StatusCode,
+			"latency":    params.Latency,
+			"request_id": params.Keys["request_id"],
+		}).Debugf("%s %s", params.MethodColor()+params.Method+params.ResetColor(), params.Path)
+
+		return ""
+	}))
 
 	router.GET("/", getHello)
 
