@@ -1,16 +1,15 @@
 package router
 
 import (
+	"../environment"
+	"./routes"
 	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-func getHello(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, "test")
-}
-
 func Configure() *gin.Engine {
+	routes.NewInstall()
+
 	gin.SetMode("release")
 
 	router := gin.New()
@@ -27,7 +26,12 @@ func Configure() *gin.Engine {
 		return ""
 	}))
 
-	router.GET("/", getHello)
+	router.POST("/image/pull", environment.PullImage)
+	router.GET("/servers", routes.GetServers)
+	router.POST("/server/create", routes.CreateServer)
+	router.PATCH("/server/start", routes.StartServer)
+	router.PATCH("/server/stop", routes.StopServer)
+	router.DELETE("/server/delete", routes.DeleteServer)
 
 	return router
 }

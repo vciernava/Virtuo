@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/vciernava/Virtuo/router"
+	"github.com/vciernava/virtuo/router"
 	"log"
 	"os"
 )

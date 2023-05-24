@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/vciernava/Virtuo/cmd"
+	"github.com/vciernava/virtuo/cmd"
 )
 
 func main() {
