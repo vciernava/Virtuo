@@ -1,10 +1,10 @@
 package router
 
 import (
-	"../environment"
-	"./routes"
 	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
+	"github.com/vciernava/virtuo/environment"
+	"github.com/vciernava/virtuo/router/routes"
 )
 
 func Configure() *gin.Engine {
