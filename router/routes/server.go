@@ -8,7 +8,7 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/gin-gonic/gin"
-	"github.com/vciernava/virtuo/environment"
+	"github.com/vciernava/Virtuo/environment"
 	"net/http"
 )
 

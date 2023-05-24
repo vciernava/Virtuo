@@ -3,8 +3,8 @@ package router
 import (
 	"github.com/apex/log"
 	"github.com/gin-gonic/gin"
-	"github.com/vciernava/virtuo/environment"
-	"github.com/vciernava/virtuo/router/routes"
+	"github.com/vciernava/Virtuo/environment"
+	"github.com/vciernava/Virtuo/router/routes"
 )
 
 func Configure() *gin.Engine {
