@@ -26,6 +26,7 @@ func Configure() *gin.Engine {
 		return ""
 	}))
 
+	router.GET("/", routes.Hello)
 	router.POST("/image/pull", environment.PullImage)
 	router.GET("/servers", routes.GetServers)
 	router.POST("/server/create", routes.CreateServer)

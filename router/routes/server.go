@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/docker/go-connections/nat"
 	"github.com/gin-gonic/gin"
 	"github.com/vciernava/Virtuo/environment"
 	"net/http"
@@ -49,6 +50,8 @@ func GetServers(c *gin.Context) {
 type ContainerCreateRequest struct {
 	Image              string   `json:"image"`
 	ContainerName      string   `json:"containername"`
+	ServerPort         string   `json:"port"`
+	ExposedPorts       []string `json:"ports"`
 	Env                []string `json:"env"`
 	StartAfterCreation bool     `json:"startaftercreation"`
 }
@@ -65,31 +68,37 @@ func CreateServer(c *gin.Context) {
 		return
 	}
 
-	//portBinding := nat.PortBinding{
-	//	HostIP:   "0.0.0.0",
-	//	HostPort: "25567",
-	//}
-	//
-	//portBindings := nat.PortMap{
-	//	nat.Port("25567/tcp"): []nat.PortBinding{portBinding},
-	//}
+	portBinding := nat.PortBinding{
+		HostIP:   "0.0.0.0",
+		HostPort: req.ServerPort,
+	}
+
+	portBindings := nat.PortMap{
+		nat.Port("25565/tcp"): []nat.PortBinding{portBinding},
+	}
+
+	exposedPorts := map[nat.Port]struct{}{
+		"25565/tcp": struct{}{},
+	}
 
 	mountVolumes := []mount.Mount{
 		{
 			Type:   mount.TypeBind,
-			Source: "C:/minecraft-server",
+			Source: "C:/docker/" + req.ContainerName,
 			Target: "/data",
 		},
 	}
 
 	config := &container.Config{
-		Image:       req.Image,
-		Env:         req.Env,
-		AttachStdin: true,
-		OpenStdin:   true,
+		Image:        req.Image,
+		Env:          req.Env,
+		ExposedPorts: exposedPorts,
+		AttachStdin:  true,
+		OpenStdin:    true,
 	}
 	hostConf := &container.HostConfig{
-		Mounts: mountVolumes,
+		PortBindings: portBindings,
+		Mounts:       mountVolumes,
 	}
 
 	resp, err := cli.ContainerCreate(context.Background(), config, hostConf, nil, nil, req.ContainerName)
