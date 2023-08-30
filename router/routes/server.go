@@ -3,6 +3,7 @@ package routes
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -11,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/vciernava/Virtuo/environment"
 	"net/http"
+	"strconv"
 )
 
 var (
@@ -50,9 +52,11 @@ func GetServers(c *gin.Context) {
 type ContainerCreateRequest struct {
 	Image              string   `json:"image"`
 	ContainerName      string   `json:"containername"`
-	ServerPort         string   `json:"port"`
+	ServerPort         int      `json:"port"`
 	ExposedPorts       []string `json:"ports"`
 	Env                []string `json:"env"`
+	MaxPlayers         int      `json:"max_players"`
+	Eula               bool     `json:"eula"`
 	StartAfterCreation bool     `json:"startaftercreation"`
 }
 
@@ -70,24 +74,30 @@ func CreateServer(c *gin.Context) {
 
 	portBinding := nat.PortBinding{
 		HostIP:   "0.0.0.0",
-		HostPort: req.ServerPort,
+		HostPort: strconv.Itoa(req.ServerPort),
 	}
 
+	dynamicPortBind := strconv.Itoa(req.ServerPort) + "/tcp"
+
 	portBindings := nat.PortMap{
-		nat.Port("25565/tcp"): []nat.PortBinding{portBinding},
+		nat.Port(dynamicPortBind): []nat.PortBinding{portBinding},
 	}
 
 	exposedPorts := map[nat.Port]struct{}{
-		"25565/tcp": struct{}{},
+		nat.Port(dynamicPortBind): struct{}{},
 	}
 
 	mountVolumes := []mount.Mount{
 		{
-			Type:   mount.TypeBind,
-			Source: "C:/docker/" + req.ContainerName,
+			Type:   mount.TypeVolume,
+			Source: req.ContainerName,
 			Target: "/data",
 		},
 	}
+
+	req.Env = append(req.Env, fmt.Sprintf("EULA=%t", req.Eula))
+	req.Env = append(req.Env, fmt.Sprintf("SERVER_PORT=%d", req.ServerPort))
+	req.Env = append(req.Env, fmt.Sprintf("MAX_PLAYERS=%d", req.MaxPlayers))
 
 	config := &container.Config{
 		Image:        req.Image,
@@ -213,7 +223,12 @@ func DeleteServer(c *gin.Context) {
 		return
 	}
 
-	err := cli.ContainerRemove(context.Background(), req.ContainerID, types.ContainerRemoveOptions{})
+	DeleteOptions := types.ContainerRemoveOptions{
+		RemoveVolumes: true,
+		Force:         true,
+	}
+
+	err := cli.ContainerRemove(context.Background(), req.ContainerID, DeleteOptions)
 	if err != nil {
 		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
 	}

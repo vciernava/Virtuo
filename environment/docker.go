@@ -3,6 +3,7 @@ package environment
 import (
 	"context"
 	"emperror.dev/errors"
+	"encoding/json"
 	"fmt"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -57,4 +58,22 @@ func PullImage(c *gin.Context) {
 	}
 
 	c.Writer.WriteString("Image pulled successfully.\n")
+}
+
+func GetImages(c *gin.Context) {
+	options := types.ImageListOptions{}
+
+	response, err := _client.ImageList(context.Background(), options)
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+	}
+
+	c.Writer.Header().Set("Content-Type", "application/json")
+	c.Writer.WriteHeader(http.StatusCreated)
+	_, err = c.Writer.Write(jsonResponse)
+	if err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+	}
 }
