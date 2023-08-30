@@ -2,15 +2,16 @@ package environment
 
 import (
 	"context"
-	"emperror.dev/errors"
 	"encoding/json"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
 	"sync"
+
+	"emperror.dev/errors"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
+	"github.com/gin-gonic/gin"
 )
 
 var (
@@ -64,6 +65,9 @@ func GetImages(c *gin.Context) {
 	options := types.ImageListOptions{}
 
 	response, err := _client.ImageList(context.Background(), options)
+	if err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+	}
 
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
